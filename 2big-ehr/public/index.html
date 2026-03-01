@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2BIG EHR – Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="logo">
+        <h1>2BIG</h1>
+        <p> Otin Health Record System</p>
+      </div>
+      <div id="alert" style="display:none"></div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter username" required autofocus>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px">Sign In</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    // Redirect if already logged in
+    if (localStorage.getItem('ehr_user')) {
+      window.location.href = 'dashboard.html';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const alertEl = document.getElementById('alert');
+      alertEl.style.display = 'none';
+
+      if (!username || !password) {
+        alertEl.className = 'alert alert-error';
+        alertEl.textContent = 'Username and password are required.';
+        alertEl.style.display = 'block';
+        return;
+      }
+
+      // Demo-only: accept any credentials
+      const user = { name: username, role: 'Demo User' };
+      localStorage.setItem('ehr_user', JSON.stringify(user));
+      window.location.href = 'dashboard.html';
+    });
+  </script>
+</body>
+</html>

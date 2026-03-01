@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2BIG EHR – Patient Detail</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <a class="brand" href="dashboard.html">2BIG EHR</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="patients.html">Patients</a>
+    <div class="nav-right">
+      <span class="user-info" id="userInfo"></span>
+      <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  <div class="container">
+    <!-- Patient Header -->
+    <div id="patientHeader" class="card" style="display:none">
+      <div class="patient-header">
+        <div class="patient-avatar" id="patientInitial"></div>
+        <div class="patient-header-info">
+          <h2 id="patientName"></h2>
+          <p id="patientMeta"></p>
+        </div>
+        <div style="margin-left:auto">
+          <span class="badge" id="statusBadge"></span>
+          <button id="dischargeBtn" class="btn btn-danger btn-sm" style="margin-left:12px;display:none"
+            onclick="dischargePatient()">Discharge Patient</button>
+          <button class="btn btn-secondary btn-sm" style="margin-left:12px" onclick="resetDemoData()">Reset Demo Data</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="notFound" style="display:none" class="card">
+      <div class="empty-state">Patient not found. <a href="patients.html">Go back</a></div>
+    </div>
+
+    <div id="mainContent" style="display:none">
+      <div class="two-col">
+        <!-- Add Vitals Form -->
+        <div class="card">
+          <h2>Record Vitals &amp; Notes</h2>
+          <div id="vitalsAlert" style="display:none"></div>
+          <form id="vitalsForm">
+            <div class="form-group">
+              <label for="bp">Blood Pressure (mmHg)</label>
+              <input type="text" id="bp" placeholder="e.g. 120/80" required>
+            </div>
+            <div class="form-group">
+              <label for="temperature">Temperature (°C)</label>
+              <input type="text" id="temperature" placeholder="e.g. 37.0" required>
+            </div>
+            <div class="form-group">
+              <label for="heartRate">Heart Rate (bpm)</label>
+              <input type="text" id="heartRate" placeholder="e.g. 72" required>
+            </div>
+            <div class="form-group">
+              <label for="notes">Progress Notes</label>
+              <textarea id="notes" placeholder="Enter clinical notes…"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%">Save Vitals</button>
+          </form>
+        </div>
+
+        <!-- Vitals History -->
+        <div class="card">
+          <h2>Vitals &amp; Notes History</h2>
+          <div id="vitalsList"><div class="empty-state">Loading…</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('ehr_user') || 'null');
+    if (!user) window.location.href = 'index.html';
+    document.getElementById('userInfo').textContent = user ? user.name + ' (' + user.role + ')' : '';
+
+    const params = new URLSearchParams(window.location.search);
+    const patientId = params.get('id');
+    let currentPatient = null;
+
+    function logout() {
+      localStorage.removeItem('ehr_user');
+      window.location.href = 'index.html';
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function getPatients() {
+      return JSON.parse(localStorage.getItem('ehr_patients') || '[]');
+    }
+
+    function savePatients(patients) {
+      localStorage.setItem('ehr_patients', JSON.stringify(patients));
+    }
+
+    function getVitals() {
+      return JSON.parse(localStorage.getItem('ehr_vitals') || '[]');
+    }
+
+    function saveVitals(vitals) {
+      localStorage.setItem('ehr_vitals', JSON.stringify(vitals));
+    }
+
+    function loadPatient() {
+      if (!patientId) {
+        document.getElementById('notFound').style.display = '';
+        return;
+      }
+      const patients = getPatients();
+      const patient = patients.find(p => p.id === patientId);
+      if (!patient) {
+        document.getElementById('notFound').style.display = '';
+        return;
+      }
+      currentPatient = { ...patient };
+
+      document.title = '2BIG EHR \u2013 ' + patient.name;
+      document.getElementById('patientInitial').textContent = patient.name.charAt(0).toUpperCase();
+      document.getElementById('patientName').textContent = patient.name;
+      document.getElementById('patientMeta').textContent =
+        'Age: ' + patient.age + ' \xb7 ' + patient.gender + ' \xb7 Admitted: ' + patient.admissionDate;
+
+      const badge = document.getElementById('statusBadge');
+      if (patient.status === 'active') {
+        badge.className = 'badge badge-active';
+        badge.textContent = 'Active';
+        document.getElementById('dischargeBtn').style.display = '';
+      } else {
+        badge.className = 'badge badge-discharged';
+        badge.textContent = 'Discharged';
+        document.getElementById('dischargeBtn').style.display = 'none';
+      }
+
+      document.getElementById('patientHeader').style.display = '';
+      document.getElementById('mainContent').style.display = '';
+
+      const vitals = getVitals().filter(v => v.patientId === patientId);
+      renderVitals(vitals);
+    }
+
+    function renderVitals(vitals) {
+      const el = document.getElementById('vitalsList');
+      if (!vitals.length) {
+        el.innerHTML = '<div class="empty-state">No vitals recorded yet.</div>';
+        return;
+      }
+      const sorted = [...vitals].sort((a, b) => new Date(b.date) - new Date(a.date));
+      el.innerHTML = sorted.map(v => `
+        <div class="vitals-item">
+          <div class="vitals-date">${new Date(v.date).toLocaleString()}</div>
+          <div class="vitals-values">
+            <span>BP: ${escHtml(v.bp)}</span>
+            <span>Temp: ${escHtml(v.temperature)}°C</span>
+            <span>HR: ${escHtml(v.heartRate)} bpm</span>
+          </div>
+          ${v.notes ? '<div class="vitals-notes">' + escHtml(v.notes) + '</div>' : ''}
+        </div>
+      `).join('');
+    }
+
+    function resetDemoData() {
+      if (!confirm('Reset demo data? This will restore the two demo patients and clear all vitals.')) return;
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem('ehr_patients', JSON.stringify([
+        { id: 'P1000000001', name: 'Maria Santos', age: 45, gender: 'Female', admissionDate: today, status: 'active' },
+        { id: 'P1000000002', name: 'Juan dela Cruz', age: 32, gender: 'Male', admissionDate: today, status: 'active' }
+      ]));
+      localStorage.removeItem('ehr_vitals');
+      window.location.href = 'patients.html';
+    }
+
+    function dischargePatient() {
+      if (!confirm('Are you sure you want to discharge this patient?')) return;
+      const patients = getPatients();
+      const idx = patients.findIndex(p => p.id === patientId);
+      if (idx === -1) { alert('Patient not found.'); return; }
+      if (patients[idx].status === 'discharged') { alert('Patient is already discharged.'); return; }
+      patients[idx].status = 'discharged';
+      savePatients(patients);
+      loadPatient();
+    }
+
+    document.getElementById('vitalsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const alertEl = document.getElementById('vitalsAlert');
+      alertEl.style.display = 'none';
+      const bp = document.getElementById('bp').value;
+      const temperature = document.getElementById('temperature').value;
+      const heartRate = document.getElementById('heartRate').value;
+      const notes = document.getElementById('notes').value;
+
+      if (!bp || !temperature || !heartRate) {
+        alertEl.className = 'alert alert-error';
+        alertEl.textContent = 'Blood pressure, temperature, and heart rate are required.';
+        alertEl.style.display = 'block';
+        return;
+      }
+
+      const vitals = getVitals();
+      vitals.push({
+        id: 'V' + Date.now() + Math.floor(Math.random() * 10000),
+        patientId,
+        bp,
+        temperature,
+        heartRate,
+        notes: notes || '',
+        date: new Date().toISOString()
+      });
+      saveVitals(vitals);
+
+      alertEl.className = 'alert alert-success';
+      alertEl.textContent = 'Vitals saved!';
+      alertEl.style.display = 'block';
+      document.getElementById('vitalsForm').reset();
+      loadPatient();
+    });
+
+    loadPatient();
+  </script>
+</body>
+</html>

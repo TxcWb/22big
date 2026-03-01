@@ -1,0 +1,16 @@
+[
+  {
+    "id": "U001",
+    "username": "doctor",
+    "password": "doctor123",
+    "role": "doctor",
+    "name": "Dr. Smith"
+  },
+  {
+    "id": "U002",
+    "username": "nurse",
+    "password": "nurse123",
+    "role": "nurse",
+    "name": "Nurse Jane"
+  }
+]

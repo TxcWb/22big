@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2BIG EHR – Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <a class="brand" href="dashboard.html">2BIG EHR</a>
+    <a href="dashboard.html" class="active">Dashboard</a>
+    <a href="patients.html">Patients</a>
+    <div class="nav-right">
+      <span class="user-info" id="userInfo"></span>
+      <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  <div class="container">
+    <div class="page-title">Dashboard</div>
+
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-value" id="totalPatients">–</div>
+        <div class="stat-label">Total Patients</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="activePatients">–</div>
+        <div class="stat-label">Active Patients</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="todaysVisits">–</div>
+        <div class="stat-label">Today's Visits</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Active Patients</h2>
+      <div id="activeList"><div class="empty-state">Loading…</div></div>
+    </div>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('ehr_user') || 'null');
+    if (!user) window.location.href = 'index.html';
+    document.getElementById('userInfo').textContent = user ? user.name + ' (' + user.role + ')' : '';
+
+    function logout() {
+      localStorage.removeItem('ehr_user');
+      window.location.href = 'index.html';
+    }
+
+    function getPatients() {
+      return JSON.parse(localStorage.getItem('ehr_patients') || '[]');
+    }
+
+    function getVitals() {
+      return JSON.parse(localStorage.getItem('ehr_vitals') || '[]');
+    }
+
+    function loadStats() {
+      const patients = getPatients();
+      const vitals = getVitals();
+      const today = new Date().toISOString().slice(0, 10);
+      document.getElementById('totalPatients').textContent = patients.length;
+      document.getElementById('activePatients').textContent = patients.filter(p => p.status === 'active').length;
+      document.getElementById('todaysVisits').textContent = vitals.filter(v => v.date && v.date.slice(0, 10) === today).length;
+    }
+
+    function loadActivePatients() {
+      const patients = getPatients().filter(p => p.status === 'active');
+      const el = document.getElementById('activeList');
+      if (!patients.length) {
+        el.innerHTML = '<div class="empty-state">No active patients.</div>';
+        return;
+      }
+      el.innerHTML = patients.map(p => `
+        <div class="patient-item" onclick="window.location.href='patient.html?id=${p.id}'">
+          <div>
+            <div class="patient-name">${escHtml(p.name)}</div>
+            <div class="patient-meta">Age: ${p.age} · ${escHtml(p.gender)} · Admitted: ${p.admissionDate}</div>
+          </div>
+          <span class="badge badge-active">Active</span>
+        </div>
+      `).join('');
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    loadStats();
+    loadActivePatients();
+  </script>
+</body>
+</html>

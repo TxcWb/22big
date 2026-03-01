@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2BIG EHR – Patients</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <a class="brand" href="dashboard.html">2BIG EHR</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="patients.html" class="active">Patients</a>
+    <div class="nav-right">
+      <span class="user-info" id="userInfo"></span>
+      <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  <div class="container">
+    <div class="page-title">Patients</div>
+    <div class="two-col">
+      <!-- Add Patient Form -->
+      <div class="card">
+        <h2>Add New Patient</h2>
+        <div id="formAlert" style="display:none"></div>
+        <form id="addPatientForm">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" placeholder="Patient full name" required>
+          </div>
+          <div class="form-group">
+            <label for="age">Age</label>
+            <input type="number" id="age" min="0" max="150" placeholder="Age" required>
+          </div>
+          <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" required>
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="admissionDate">Admission Date</label>
+            <input type="date" id="admissionDate">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%">Add Patient</button>
+        </form>
+      </div>
+
+      <!-- Patient List -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid #e9ecef;padding-bottom:10px">
+          <h2 style="margin:0;border:none;padding:0">All Patients</h2>
+          <button class="btn btn-secondary btn-sm" onclick="resetDemoData()">Reset Demo Data</button>
+        </div>
+        <div id="patientList"><div class="empty-state">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('ehr_user') || 'null');
+    if (!user) window.location.href = 'index.html';
+    document.getElementById('userInfo').textContent = user ? user.name + ' (' + user.role + ')' : '';
+
+    // Default admission date to today
+    document.getElementById('admissionDate').value = new Date().toISOString().slice(0, 10);
+
+    function logout() {
+      localStorage.removeItem('ehr_user');
+      window.location.href = 'index.html';
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function getPatients() {
+      let patients = JSON.parse(localStorage.getItem('ehr_patients') || 'null');
+      if (!patients) {
+        // Seed demo data on first use
+        patients = [
+          { id: 'P1000000001', name: 'Maria Santos', age: 45, gender: 'Female', admissionDate: new Date().toISOString().slice(0, 10), status: 'active' },
+          { id: 'P1000000002', name: 'Juan dela Cruz', age: 32, gender: 'Male', admissionDate: new Date().toISOString().slice(0, 10), status: 'active' }
+        ];
+        localStorage.setItem('ehr_patients', JSON.stringify(patients));
+      }
+      return patients;
+    }
+
+    function savePatients(patients) {
+      localStorage.setItem('ehr_patients', JSON.stringify(patients));
+    }
+
+    function resetDemoData() {
+      if (!confirm('Reset demo data? This will restore the two demo patients and clear all vitals.')) return;
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem('ehr_patients', JSON.stringify([
+        { id: 'P1000000001', name: 'Maria Santos', age: 45, gender: 'Female', admissionDate: today, status: 'active' },
+        { id: 'P1000000002', name: 'Juan dela Cruz', age: 32, gender: 'Male', admissionDate: today, status: 'active' }
+      ]));
+      localStorage.removeItem('ehr_vitals');
+      loadPatients();
+    }
+
+    function loadPatients() {
+      const patients = getPatients();
+      const el = document.getElementById('patientList');
+      if (!patients.length) {
+        el.innerHTML = '<div class="empty-state">No patients found.</div>';
+        return;
+      }
+      el.innerHTML = patients.map(p => `
+        <div class="patient-item" onclick="window.location.href='patient.html?id=${p.id}'">
+          <div>
+            <div class="patient-name">${escHtml(p.name)}</div>
+            <div class="patient-meta">Age: ${p.age} · ${escHtml(p.gender)} · Admitted: ${p.admissionDate}</div>
+          </div>
+          <span class="badge ${p.status === 'active' ? 'badge-active' : 'badge-discharged'}">
+            ${p.status === 'active' ? 'Active' : 'Discharged'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('addPatientForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const alertEl = document.getElementById('formAlert');
+      alertEl.style.display = 'none';
+      const name = document.getElementById('name').value.trim();
+      const age = document.getElementById('age').value;
+      const gender = document.getElementById('gender').value;
+      const admissionDate = document.getElementById('admissionDate').value;
+
+      if (!name || !age || !gender) {
+        alertEl.className = 'alert alert-error';
+        alertEl.textContent = 'Name, age, and gender are required.';
+        alertEl.style.display = 'block';
+        return;
+      }
+
+      const patients = getPatients();
+      const newPatient = {
+        id: 'P' + Date.now() + Math.floor(Math.random() * 10000),
+        name,
+        age: parseInt(age, 10),
+        gender,
+        admissionDate: admissionDate || new Date().toISOString().slice(0, 10),
+        status: 'active'
+      };
+      patients.push(newPatient);
+      savePatients(patients);
+
+      alertEl.className = 'alert alert-success';
+      alertEl.textContent = 'Patient added successfully!';
+      alertEl.style.display = 'block';
+      document.getElementById('addPatientForm').reset();
+      document.getElementById('admissionDate').value = new Date().toISOString().slice(0, 10);
+      loadPatients();
+    });
+
+    loadPatients();
+  </script>
+</body>
+</html>

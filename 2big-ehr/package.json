@@ -1,0 +1,12 @@
+{
+  "name": "2big-ehr",
+  "version": "1.0.0",
+  "description": "2BIG Electronic Health Record MVP",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

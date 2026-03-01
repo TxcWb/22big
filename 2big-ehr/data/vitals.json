@@ -1,0 +1,29 @@
+[
+  {
+    "id": "V1740000001",
+    "patientId": "P1740000001",
+    "bp": "120/80",
+    "temperature": "36.8",
+    "heartRate": "72",
+    "notes": "Patient is stable. Continue current medication.",
+    "date": "2026-02-28T08:00:00.000Z"
+  },
+  {
+    "id": "V1740000002",
+    "patientId": "P1740000002",
+    "bp": "118/76",
+    "temperature": "37.1",
+    "heartRate": "80",
+    "notes": "Slight fever, monitoring required.",
+    "date": "2026-02-28T09:30:00.000Z"
+  },
+  {
+    "id": "V1740000003",
+    "patientId": "P1740000001",
+    "bp": "122/82",
+    "temperature": "36.9",
+    "heartRate": "75",
+    "notes": "BP slightly elevated. Advised rest.",
+    "date": "2026-02-27T14:00:00.000Z"
+  }
+]

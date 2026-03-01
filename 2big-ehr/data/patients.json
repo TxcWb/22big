@@ -1,0 +1,26 @@
+[
+  {
+    "id": "P1740000001",
+    "name": "John Doe",
+    "age": 45,
+    "gender": "Male",
+    "admissionDate": "2026-02-25",
+    "status": "active"
+  },
+  {
+    "id": "P1740000002",
+    "name": "Maria Santos",
+    "age": 32,
+    "gender": "Female",
+    "admissionDate": "2026-02-26",
+    "status": "active"
+  },
+  {
+    "id": "P1740000003",
+    "name": "Robert Cruz",
+    "age": 60,
+    "gender": "Male",
+    "admissionDate": "2026-02-20",
+    "status": "discharged"
+  }
+]

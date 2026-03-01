@@ -1,0 +1,5 @@
+{
+  "version": 2,
+  "builds": [{ "src": "2big-ehr/public/**", "use": "@vercel/static" }],
+  "routes": [{ "src": "/(.*)", "dest": "/2big-ehr/public/$1" }]
+}
