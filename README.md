@@ -1,14 +1,13 @@
 # Tubig
-Electronic Health Record
+Electronic Patient Health Record
 
 ## 2BIG EHR – Demo
 
-This is a **demo-only, fully static** deployment of the 2BIG EHR application, suitable for Vercel and any static hosting provider.
+This is a **demo-only, fully static** deployment of the 2BIG EPHR application.
 
 ### Demo Login
 
-Enter any username and password to log in. No real authentication is performed.
-
+Enter username or password to log-in.
 ### Data Storage
 
 All data (patients, vitals) is stored in your browser's **localStorage**. This means:
