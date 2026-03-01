@@ -13,11 +13,4 @@
     "role": "nurse",
     "name": "Nurse Jane"
   }
-  {
-    "id": "U003",
-    "username": "doctor",
-    "password": "12345678",
-    "role": "doctor",
-    "name": "Andrei Loja"
-  }
 ]
