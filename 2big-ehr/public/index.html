@@ -33,6 +33,7 @@
       window.location.href = 'dashboard.html';
     }
 
+    // Demo-only authentication – validates against users.json; not secure for production use.
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const username = document.getElementById('username').value.trim();
@@ -47,10 +48,28 @@
         return;
       }
 
-      // Demo-only: accept any credentials
-      const user = { name: username, role: 'Demo User' };
-      localStorage.setItem('ehr_user', JSON.stringify(user));
-      window.location.href = 'dashboard.html';
+      fetch('../data/users.json')
+        .then(function(res) { return res.json(); })
+        .then(function(users) {
+          const match = users.find(function(u) {
+            return u.username === username && u.password === password;
+          });
+          if (!match) {
+            alertEl.className = 'alert alert-error';
+            alertEl.textContent = 'Invalid username or password.';
+            alertEl.style.display = 'block';
+            return;
+          }
+          // Store safe user object (no password) then redirect
+          const user = { id: match.id, name: match.name, role: match.role };
+          localStorage.setItem('ehr_user', JSON.stringify(user));
+          window.location.href = 'dashboard.html';
+        })
+        .catch(function() {
+          alertEl.className = 'alert alert-error';
+          alertEl.textContent = 'Unable to load credentials. Please try again.';
+          alertEl.style.display = 'block';
+        });
     });
   </script>
 </body>
