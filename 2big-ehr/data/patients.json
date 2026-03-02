@@ -30,5 +30,13 @@
     "gender": "Male",
     "admissionDate": "2026-03-01",
     "status": "active"
+    },
+  {
+    "id": "P1740000005",
+    "name": "Martin Diabetic",
+    "age": 67,
+    "gender": "Female",
+    "admissionDate": "2026-03-01",
+    "status": "discharged"
   }
 ]
