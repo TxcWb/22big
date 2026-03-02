@@ -79,31 +79,46 @@
     }
 
     function getPatients() {
-      let patients = JSON.parse(localStorage.getItem('ehr_patients') || 'null');
-      if (!patients) {
-        // Seed demo data on first use
-        patients = [
-          { id: 'P1000000001', name: 'Maria Santos', age: 45, gender: 'Female', admissionDate: new Date().toISOString().slice(0, 10), status: 'active' },
-          { id: 'P1000000002', name: 'Juan dela Cruz', age: 32, gender: 'Male', admissionDate: new Date().toISOString().slice(0, 10), status: 'active' }
-        ];
-        localStorage.setItem('ehr_patients', JSON.stringify(patients));
-      }
-      return patients;
+      return JSON.parse(localStorage.getItem('ehr_patients') || '[]');
     }
 
     function savePatients(patients) {
       localStorage.setItem('ehr_patients', JSON.stringify(patients));
     }
 
+    async function seedPatientsFromJson() {
+      try {
+        const res = await fetch('../data/patients.json');
+        if (!res.ok) throw new Error('fetch failed');
+        const jsonPatients = await res.json();
+        if (!Array.isArray(jsonPatients)) throw new Error('not array');
+        const stored = JSON.parse(localStorage.getItem('ehr_patients') || '[]');
+        const storedIds = new Set(stored.map(p => p.id));
+        let changed = false;
+        for (const p of jsonPatients) {
+          if (p.id && !storedIds.has(p.id)) {
+            stored.push(p);
+            changed = true;
+          }
+        }
+        if (changed) localStorage.setItem('ehr_patients', JSON.stringify(stored));
+      } catch (e) {
+        // fallback: if localStorage still has no patients, seed with demo data
+        if (!JSON.parse(localStorage.getItem('ehr_patients') || '[]').length) {
+          const today = new Date().toISOString().slice(0, 10);
+          localStorage.setItem('ehr_patients', JSON.stringify([
+            { id: 'P1000000001', name: 'Maria Santos', age: 45, gender: 'Female', admissionDate: today, status: 'active' },
+            { id: 'P1000000002', name: 'Juan dela Cruz', age: 32, gender: 'Male', admissionDate: today, status: 'active' }
+          ]));
+        }
+      }
+    }
+
     function resetDemoData() {
-      if (!confirm('Reset demo data? This will restore the two demo patients and clear all vitals.')) return;
-      const today = new Date().toISOString().slice(0, 10);
-      localStorage.setItem('ehr_patients', JSON.stringify([
-        { id: 'P1000000001', name: 'Maria Santos', age: 45, gender: 'Female', admissionDate: today, status: 'active' },
-        { id: 'P1000000002', name: 'Juan dela Cruz', age: 32, gender: 'Male', admissionDate: today, status: 'active' }
-      ]));
+      if (!confirm('Reset demo data? This will restore patients from patients.json and clear all vitals.')) return;
+      localStorage.removeItem('ehr_patients');
       localStorage.removeItem('ehr_vitals');
-      loadPatients();
+      seedPatientsFromJson().then(function() { loadPatients(); }).catch(function() { loadPatients(); });
     }
 
     function loadPatients() {
@@ -162,7 +177,7 @@
       loadPatients();
     });
 
-    loadPatients();
+    seedPatientsFromJson().then(function() { loadPatients(); });
   </script>
 </body>
 </html>

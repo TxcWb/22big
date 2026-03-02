@@ -55,6 +55,27 @@
       return JSON.parse(localStorage.getItem('ehr_patients') || '[]');
     }
 
+    async function seedPatientsFromJson() {
+      try {
+        const res = await fetch('../data/patients.json');
+        if (!res.ok) return;
+        const jsonPatients = await res.json();
+        if (!Array.isArray(jsonPatients)) return;
+        const stored = JSON.parse(localStorage.getItem('ehr_patients') || '[]');
+        const storedIds = new Set(stored.map(p => p.id));
+        let changed = false;
+        for (const p of jsonPatients) {
+          if (p.id && !storedIds.has(p.id)) {
+            stored.push(p);
+            changed = true;
+          }
+        }
+        if (changed) localStorage.setItem('ehr_patients', JSON.stringify(stored));
+      } catch (e) {
+        // continue with whatever is already in localStorage
+      }
+    }
+
     function getVitals() {
       return JSON.parse(localStorage.getItem('ehr_vitals') || '[]');
     }
@@ -90,8 +111,13 @@
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 
-    loadStats();
-    loadActivePatients();
+    seedPatientsFromJson().then(function() {
+      loadStats();
+      loadActivePatients();
+    }).catch(function() {
+      loadStats();
+      loadActivePatients();
+    });
   </script>
 </body>
 </html>
