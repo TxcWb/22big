@@ -26,5 +26,12 @@
     "password": "123456789",
     "role": "nurse",
     "name": "budoy Loja"
+    },
+  {
+    "id": "U005",
+    "username": "kobe",
+    "password": "123",
+    "role": "nurse",
+    "name": "Nurse kobe"
   }
 ]
